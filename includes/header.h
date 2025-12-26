@@ -41,3 +41,5 @@ int	init_memory_list(t_mem_list **m);
 void	clean_memory_list(t_mem_list **mem);
 
 void	update_window_size(t_win *win, int fd);
+
+void	put_pixel(t_win *win, int x, int y, int z, char *color, char *character);
