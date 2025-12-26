@@ -64,7 +64,7 @@ int	main(void)
 	color_background(&win);
 	while(1)
 	{
-		put_pixel(&win, 0, 0, 1, "37m", "█");
+		put_pixel(&win, 0, 0, 1, "31m", "█");
 		usleep(1000000/FPS);
 	}
 	
