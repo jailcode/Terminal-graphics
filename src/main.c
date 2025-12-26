@@ -28,12 +28,16 @@ void	color_background(t_win *win)
 		x = -1;
 		while(++x < win->cols)
 		{
-			CLEAR_SCREEN;
-			put_pixel(win, x, y, 1, "37m", "█");
+			//put_pixel(win, x, y, 1, "37m", "█");
+
+			printf("\033[%d;%dH", y, x);
+			printf("\033[37m█");
+			fflush(stdout);
+			RESET;
 		}
 		usleep(1000);
 	}
-	
+
 }
 
 # define FPS 60
@@ -41,8 +45,8 @@ void	color_background(t_win *win)
 void	put_pixel(t_win *win, int x, int y, int z, char *color, char *character)
 {
 	t_coord c;
-	x = x;
-	y = y;
+	x = x / z;
+	y = y / z;
 	if (z == 0)
 		return ;
 	c = get_transformed_cords(win, x, y);
@@ -60,7 +64,7 @@ int	main(void)
 	color_background(&win);
 	while(1)
 	{
-		put_pixel(&win, 10, 20, 1, "37m", "█");
+		put_pixel(&win, 0, 0, 1, "37m", "█");
 		usleep(1000000/FPS);
 	}
 	
