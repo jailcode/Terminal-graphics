@@ -9,7 +9,7 @@ OBJS := $(SRCS:.c=.o)
 CC := cc
 
 FLAGS := -Wall -Werror -Wextra -g
-LFLAGS := -lpthread
+LFLAGS := -lpthread -lm
 
 all: $(NAME)
 

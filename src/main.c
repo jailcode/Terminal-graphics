@@ -44,14 +44,21 @@ void    render_screen(t_win *win)
 void  transform_coord(t_win *win, int *row, int *col)  
 {
     *row = win->rows/2 - *row;
-    *col = *col + win->cols/2;
+    *col = (*col * 2) + win->cols/2;  // Multiply by 2 to account for aspect ratio
 }
-void    project_pixel(t_win *win, int row, int col)
+void    cvt_3d_to_2d(float *x, float *y, float *z)
+{
+    *x = *x / *z;
+    *y = *y / *z;
+}
+void    project_pixel(t_win *win, int row, int col, char *settings)
 {
     if (!win)
         return ;
     transform_coord(win, &row, &col);
-    (win->screen + row * win->cols + col)->settings = ft_strdup(win, "34m█");
+    if (row < 0 || row >= win->rows || col < 0 || col >= win->cols)
+        return ;
+    (win->screen + row * win->cols + col)->settings = settings;
 }
 
 void    reset_screen(t_win *win)
@@ -70,7 +77,8 @@ void    reset_screen(t_win *win)
         {
             screen[(i * win->cols) + j].col = j;
             screen[i * win->cols + j].row = i;
-            screen[i * win->cols + j].settings = "3m█";
+            //screen[i * win->cols + j].settings = "3m█";
+            screen[i * win->cols + j].settings = "39m.";
         }
     }
 }
@@ -86,13 +94,15 @@ int main(void)
     init_win(win, &memory);
     update_window_size(win);
 
+    double dz = 0;
+    double dt = 1.0/FPS;
     while(1)
     {
+        dz += 1*dt;
         reset_screen(win);
-
-        project_pixel(win, 0, 1);
+        // Draw points with larger Z values (closer to camera
         render_screen(win);
-        usleep(1000/FPS);
+        usleep(1000000/FPS);
     }
 
     clean_memory_list(&win->memory);
