@@ -4,6 +4,7 @@
 # define CLEAR_SCREEN printf("\033[2J")
 # define RESET printf("\033[0m")
 # define FPS 60
+# define FOCAL_LENGTH 50  // Increase this to reduce FOV (zoom in), decrease to increase FOV
 /*
 printf("\033[%d;%dH", i, j);
 printf("\033[37;41m█");
@@ -51,7 +52,7 @@ void    cvt_3d_to_2d(float *x, float *y, float *z)
     *x = *x / *z;
     *y = *y / *z;
 }
-void    project_pixel(t_win *win, int row, int col, char *settings)
+void    project_pixel_2d(t_win *win, int row, int col, char *settings)
 {
     if (!win)
         return ;
@@ -61,6 +62,18 @@ void    project_pixel(t_win *win, int row, int col, char *settings)
     (win->screen + row * win->cols + col)->settings = settings;
 }
 
+void    project_pixel_3d(t_win *win, int x, int y, int z, char *settings)
+{
+    int py, px;
+    if (!win)
+        return ;
+    if (z <= 0.1f)
+        return ;
+    py = (y * FOCAL_LENGTH) / z;
+    px = (x * FOCAL_LENGTH) / z;
+    project_pixel_2d(win, py, px, settings);
+}
+
 void    reset_screen(t_win *win)
 {
     int i, j;
@@ -68,6 +81,7 @@ void    reset_screen(t_win *win)
     
     if (!win)
         return ;
+    update_window_size(win);
     screen = win->screen;
     i = -1;
     while(++i < win->rows)
@@ -83,6 +97,66 @@ void    reset_screen(t_win *win)
     }
 }
 
+void    rotate_xz(float *x, float *y, float *z, float angle)
+{
+    float   old_x = *x;
+    float   old_z = *z;
+
+    float c = cos(angle);
+    float s = sin(angle);
+    *x = old_x * c - old_z * s;
+    *z = old_x * s + old_z * c;
+    (void)y;
+}
+
+void    translate_cube(int v[8][3])
+{
+    int i;
+
+    i = 0;
+    while(i < 8)
+    {
+        v[i][1] += 2;
+        i++;
+    }
+}
+
+float cube[8][3] = {
+    {5, 5, 5},
+    {-5, 5, 5},
+    {5, -5, 5},
+    {-5, -5, 5},
+    {5, 5, -5},
+    {-5, 5, -5},
+    {5, -5, -5},
+    {-5, -5, -5}
+    };
+void    project_cube(t_win *win, float cube[8][3])
+{
+    int i;
+    static float angle = 0.0f;
+    float v[8][3];
+    float x, y, z;
+    i = -1;
+
+    memcpy(v, cube, sizeof(v));
+    angle += 0.1;
+    if (angle >= 2 * 3.148)
+        angle = 0;
+//    translate_cube(v);
+    while(++i < 8)
+    {
+        x = v[i][0];
+        y = v[i][1];
+        z = v[i][2];
+         // Increased from 0.1f
+        rotate_xz(&x, &y, &z, angle);
+        z += 50.0f;
+        project_pixel_3d(win,x, y, z, "32m$");
+    }
+}
+
+
 int main(void)
 {
     t_win   *win;
@@ -93,14 +167,10 @@ int main(void)
     win = x_malloc(&memory, sizeof(*win));
     init_win(win, &memory);
     update_window_size(win);
-
-    double dz = 0;
-    double dt = 1.0/FPS;
     while(1)
     {
-        dz += 1*dt;
         reset_screen(win);
-        // Draw points with larger Z values (closer to camera
+        project_cube(win, cube);
         render_screen(win);
         usleep(1000000/FPS);
     }
