@@ -1,84 +1,99 @@
 #include "../includes/header.h"
-/*
-printf("\033[%d;%d#", c.row, c.col);
-	printf("\033[31m█");
-	fflush(stdout);
 
-//*/
 
 # define CLEAR_SCREEN printf("\033[2J")
 # define RESET printf("\033[0m")
-t_coord	get_transformed_cords(t_win *win, int x, int y)
-{
-	t_coord c;
-
-	c.col = x + (win->cols / 2);
-	c.row = y + (win->rows / 2);
-	return (c);
-}
-
-void	color_background(t_win *win)
-{
-	int	x;
-	int y;
-	y = -1;
-	update_window_size(win, STDOUT_FILENO);
-	while(++y < win->rows)
-	{
-		x = -1;
-		while(++x < win->cols)
-		{
-			//put_pixel(win, x, y, 1, "37m", "█");
-
-			printf("\033[%d;%dH", y, x);
-			printf("\033[37m█");
-			fflush(stdout);
-			RESET;
-		}
-		usleep(1000);
-	}
-
-}
-
 # define FPS 60
+/*
+printf("\033[%d;%dH", i, j);
+printf("\033[37;41m█");
+*/
 
-void	put_pixel(t_win *win, int x, int y, int z, char *color, char *character)
+void    print_to_terminal(int row, int col, char* msg)
 {
-	t_coord c;
-	x = x / z;
-	y = y / z;
-	if (z == 0)
-		return ;
-	c = get_transformed_cords(win, x, y);
-	printf("\033[%d;%dH", c.row, c.col);
-	printf("\033[%s%s", color, character);
-	RESET;
-	fflush(stdout);
+    printf("\033[%d;%dH", row, col);
+    if (!msg)
+        printf("\033[37;41m█");
+    else
+        printf("\033[%s", msg);
+    fflush(stdout);
+    RESET;
+}
+void    render_screen(t_win *win)
+{
+    int i;
+    int j;
+
+    t_screen *screen;
+    t_screen *current;
+    screen = win->screen;
+    if (!win)
+        return ;
+    i = -1;
+    while(++i < win->rows)
+    {
+        j = -1;
+        while(++j < win->cols)
+        {
+            current = screen + i * win->cols + j;
+            print_to_terminal(current->row, current->col, current->settings);
+        }
+    }
 }
 
-int	main(void)
+void  transform_coord(t_win *win, int *row, int *col)  
 {
-	t_win	win;
-	init_win(&win);
-	update_window_size(&win, STDOUT_FILENO);
-	color_background(&win);
-	while(1)
-	{
-		put_pixel(&win, 0, 0, 1, "31m", "█");
-		usleep(1000000/FPS);
-	}
-	
-	return (0);
+    *row = win->rows/2 - *row;
+    *col = *col + win->cols/2;
+}
+void    project_pixel(t_win *win, int row, int col)
+{
+    if (!win)
+        return ;
+    transform_coord(win, &row, &col);
+    (win->screen + row * win->cols + col)->settings = ft_strdup(win, "34m█");
 }
 
+void    reset_screen(t_win *win)
+{
+    int i, j;
+    t_screen *screen;
+    
+    if (!win)
+        return ;
+    screen = win->screen;
+    i = -1;
+    while(++i < win->rows)
+    {
+        j = -1;
+        while(++j < win->cols)
+        {
+            screen[(i * win->cols) + j].col = j;
+            screen[i * win->cols + j].row = i;
+            screen[i * win->cols + j].settings = "3m█";
+        }
+    }
+}
 
+int main(void)
+{
+    t_win   *win;
+    t_mem_list *memory;
 
-/*while(i < 100)
-	{
+    if(init_memory_list(&memory) == FAILURE)
+        return (1);
+    win = x_malloc(&memory, sizeof(*win));
+    init_win(win, &memory);
+    update_window_size(win);
 
-		printf("\033[2J");
-		printf("\033[0;0H");
-		printf("\r# %d", i++);
-		fflush(stdout);
-		usleep(50000);
-	}*/
+    while(1)
+    {
+        reset_screen(win);
+
+        project_pixel(win, 0, 1);
+        render_screen(win);
+        usleep(1000/FPS);
+    }
+
+    clean_memory_list(&win->memory);
+}

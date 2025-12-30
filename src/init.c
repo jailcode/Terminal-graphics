@@ -1,20 +1,33 @@
 #include "../includes/header.h"
 
 
-
-void	init_win(t_win *win)
+void    init_win(t_win *win, t_mem_list **memory)
 {
-    if (!win)
-        return ;
-    win->memory = NULL;
-    if (init_memory_list(&win->memory) == FAILURE)
-        return ;
-    win = x_malloc(&win->memory, sizeof(*win));
-    if (!win)
-        return ;
+    update_window_size(win);
     win->color = NULL;
-    win->rows = 0;
-    win->cols = 0;
     win->opacity = NULL;
+    win->memory = *memory;
+    win->screen = init_screen(win);
+}
 
+t_screen    *init_screen(t_win *win)
+{
+    int i, j;
+    t_screen *screen;
+
+    screen = x_malloc(&win->memory, sizeof(*screen) * win->rows * win->cols);
+    if (!screen)
+        return (NULL);
+    i = -1;
+    while(++i < win->rows)
+    {
+        j = -1;
+        while(++j < win->cols)
+        {
+            screen[(i * win->cols) + j].col = j;
+            screen[i * win->cols + j].row = i;
+            screen[i * win->cols + j].settings = ft_strdup(win, "35m█");
+        }
+    }
+    return (screen);
 }
