@@ -140,7 +140,7 @@ void    project_cube(t_win *win, float cube[8][3])
     i = -1;
 
     memcpy(v, cube, sizeof(v));
-    angle += 0.1;
+    angle += 0.05;
     if (angle >= 2 * 3.148)
         angle = 0;
 //    translate_cube(v);
@@ -152,7 +152,7 @@ void    project_cube(t_win *win, float cube[8][3])
          // Increased from 0.1f
         rotate_xz(&x, &y, &z, angle);
         z += 50.0f;
-        project_pixel_3d(win,x, y, z, "32m$");
+        project_pixel_3d(win,x, y, z, "32m█");
     }
 }
 
