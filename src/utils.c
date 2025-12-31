@@ -1,5 +1,7 @@
 #include "../includes/header.h"
 
+extern t_win *win;
+
 void    update_window_size(t_win *win)
 {
     struct winsize w;

@@ -8,6 +8,11 @@ void    init_win(t_win *win, t_mem_list **memory)
     win->opacity = NULL;
     win->memory = *memory;
     win->screen = init_screen(win);
+    // Initialize camera position
+    win->cam_x = 0.0f;
+    win->cam_y = 0.0f;
+    win->cam_z = 0.0f;
+    win->cam_distance = 50.0f;  // Distance from object
 }
 
 t_screen    *init_screen(t_win *win)
