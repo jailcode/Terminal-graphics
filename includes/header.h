@@ -89,3 +89,9 @@ void    rotate_xz(float *x, float *y, float *z, float angle);
 int    load_model(t_win *win, t_mesh *mesh);
 
 void    handle_sigwinc(int sig);
+
+
+/* enter and exit canoinical mode in terminal*/
+
+void    exit_raw_mode(t_win *win);
+void	enter_raw_mode(t_win *win);

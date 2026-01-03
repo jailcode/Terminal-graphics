@@ -22,6 +22,18 @@ void    rotate_xz(float *x, float *y, float *z, float angle)
     (void)y;
 }
 
+void    rotate_yz(float *x, float *y, float *z, float angle)
+{
+    float   old_y = *y;
+    float   old_z = *z;
+
+    float c = cos(angle);
+    float s = sin(angle);
+    *y = old_y * c - old_z * s;
+    *z = old_y * s + old_z * c;
+    (void)x;
+}
+
 void    translate_cube(int v[8][3])
 {
     int i;
@@ -69,14 +81,36 @@ void    project_cube(t_win *win, float cube[8][3])
     }
 }
 
-void    enter_noncanonicalmode(t_win *win)
+void    enter_raw_mode(t_win *win)
 {
     struct termios new_tio;
 
     tcgetattr(STDIN_FILENO, &win->old_tio);
     new_tio = win->old_tio;
-    cfmakeraw();
+    new_tio.c_lflag &=(~ICANON & ~ECHOE);
+    tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
 }
+void    exit_raw_mode(t_win *win)
+{
+    tcsetattr(STDIN_FILENO, TCSANOW, &win->old_tio);
+}
+
+void    spin_model(t_mesh *cube)
+{
+
+    float   angle = 0.05f;
+    int i = -1;
+
+    t_vertex *vertex;
+
+    while(++i < cube->VertexCount)
+    {
+        vertex = cube->Vbuffer + i;
+        rotate_xz(&vertex->x, &vertex->y, &vertex->z, angle);
+        rotate_yz(&vertex->x, &vertex->y, &vertex->z, angle);
+    }
+}
+
 
 int main(void)
 {
@@ -89,15 +123,19 @@ int main(void)
     //update_window_size(win);
     signal(SIGWINCH, &handle_sigwinc);
     win->cam_z = -100.0f;
+    enter_raw_mode(win); // not working yet;
     while(1)
     {
         reset_screen(win);
         //catch_input(win);
         //project_cube(win, cube);
         load_model(win, &cube);
+        //load_model(win, &cuby);
+        
+        spin_model(&cube);
         render_screen(win);
         usleep(1000000/FPS);
     }
-
+    exit_raw_mode(win);
     clean_memory_list(&win->memory);
 }
